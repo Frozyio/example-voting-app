@@ -1,0 +1,24 @@
+version: "3"
+
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  worker:
+    build: ./worker
+
+  db:
+    image: postgres:9.4
+    ports:
+      - "5432:5432"
+
+  frozy:
+    image: frozy/connector:0.2
+    environment:
+      FROZY_TIER: <TIER>
+      FROZY_ACCESS_TOKEN: <TOKEN>
+      FROZY_RESOURCE_NAME: <NAME>
+      FROZY_PROVIDER_HOST: db
+      FROZY_PROVIDER_PORT: 5432

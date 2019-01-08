@@ -22,10 +22,13 @@ io.sockets.on('connection', function (socket) {
   });
 });
 
+var dbhost = '10.0.1.102';
+var dbconnstr = 'postgres://postgres@'+dbhost+'/postgres';
+
 async.retry(
   {times: 1000, interval: 1000},
   function(callback) {
-    pg.connect('postgres://postgres@db/postgres', function(err, client, done) {
+    pg.connect(dbconnstr, function(err, client, done) {
       if (err) {
         console.error("Waiting for db");
       }
@@ -41,10 +44,23 @@ async.retry(
   }
 );
 
+function dbReconnect(client) {
+  pg.connect(dbconnstr, function(err, client, done) {
+    if (err) {
+      console.error("Can't reconnect, retry in 5s");
+      setTimeout(function() {dbReconnect(client) }, 5000);
+    } else {
+      console.log("Reconnected to db");
+      getVotes(client);
+    }
+  });
+}
+
 function getVotes(client) {
   client.query('SELECT vote, COUNT(id) AS count FROM votes GROUP BY vote', [], function(err, result) {
     if (err) {
       console.error("Error performing query: " + err);
+      setTimeout(function() {dbReconnect(client) }, 5000);
     } else {
       var votes = collectVotesFromResult(result);
       io.sockets.emit("scores", JSON.stringify(votes));
