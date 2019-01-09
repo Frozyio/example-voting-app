@@ -8,6 +8,7 @@ import json
 option_a = os.getenv('OPTION_A', "Cats")
 option_b = os.getenv('OPTION_B', "Dogs")
 hostname = socket.gethostname()
+ipaddress = socket.gethostbyname(hostname)
 
 app = Flask(__name__)
 
@@ -18,9 +19,7 @@ def get_redis():
 
 @app.route("/", methods=['POST','GET'])
 def hello():
-    voter_id = request.cookies.get('voter_id')
-    if not voter_id:
-        voter_id = hex(random.getrandbits(64))[2:-1]
+    voter_id = hex(random.getrandbits(64))[2:-1]
 
     vote = None
 
@@ -35,6 +34,7 @@ def hello():
         option_a=option_a,
         option_b=option_b,
         hostname=hostname,
+        ipaddress=ipaddress,
         vote=vote,
     ))
     resp.set_cookie('voter_id', voter_id)
